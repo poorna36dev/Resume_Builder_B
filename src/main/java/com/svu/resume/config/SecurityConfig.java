@@ -30,6 +30,8 @@ public class SecurityConfig {
     public SecurityFilterChain filter(HttpSecurity http) throws Exception {
         http
         .cors(cors->cors.configurationSource(corsConfigurationSource()))
+        .formLogin(form -> form.disable())
+        .httpBasic(basic -> basic.disable())
         .authorizeHttpRequests(
             authorize -> authorize
             .requestMatchers(
