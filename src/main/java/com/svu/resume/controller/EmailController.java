@@ -31,51 +31,49 @@ public class EmailController {
     }
 
     private final EmailService emailService;
+    private final com.svu.resume.service.FileUploadService fileUploadService;
 
     @PostMapping(value = "/send-email", consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> sendResumeByEmail(
             @RequestParam("recipientEmail") String recipientEmail,
-            @RequestParam("subject") String subject,
-            @RequestParam("message") String message,
+            @RequestParam("subject") String subject, // Kept for compatibility, but might be overridden or unused if we
+                                                     // use fixed subject
+            @RequestParam("message") String message, // Kept for compatibility
             @RequestParam("pdfFile") MultipartFile pdfFile,
-            Authentication authentication) throws IOException {
+            Authentication authentication) {
 
         log.info("Received email request for: {}", recipientEmail);
 
         if (pdfFile == null || pdfFile.isEmpty()) {
-            log.error("PDF File is missing or empty");
             throw new RuntimeException("pdf file is required");
         }
-
-        log.info("PDF Size: {} bytes, Original Filename: {}", pdfFile.getSize(), pdfFile.getOriginalFilename());
 
         if (Objects.isNull(recipientEmail)) {
             throw new RuntimeException("email is required");
         }
-        byte[] pdfBytes = pdfFile.getBytes();
-        String originalFilename = pdfFile.getOriginalFilename();
-        String filename = Objects.nonNull(originalFilename) ? originalFilename : "resume.pdf";
-        String emailSubject = (subject == null || subject.trim().isEmpty())
-        ? "Resume Application"
-        : subject;
-
-        String emailBody = (message == null || message.trim().isEmpty())
-        ? "Please find attached my resume.\n\nBest regards"
-        : message;
-
 
         try {
-            log.info("Attempting to send email to: {}", recipientEmail);
-            emailService.sendEmailWithAttachment(recipientEmail, emailSubject, emailBody, pdfBytes, filename);
-            log.info("Email sent successfully to: {}", recipientEmail);
+            // 1. Upload PDF to Cloudinary
+            log.info("Uploading PDF to Cloudinary...");
+            com.svu.resume.service.FileUploadService fileUploadService = this.fileUploadService; // Need to inject this
+            String downloadUrl = fileUploadService.uploadResumePdf(pdfFile);
+            log.info("PDF uploaded successfully. Download URL: {}", downloadUrl);
+
+            // 2. Send Email with Link
+            log.info("Sending email to: {}", recipientEmail);
+            emailService.sendDownloadableResume(recipientEmail, downloadUrl);
+            log.info("Email sent successfully.");
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Resume sent successfully to " + recipientEmail);
+            response.put("downloadUrl", downloadUrl);
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            log.error("Failed to send email to: {}", recipientEmail, e);
+            log.error("Failed to process request: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to send email: " + e.getMessage());
         }
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "resume sent successfully" + recipientEmail);
-        return ResponseEntity.ok(response);
     }
 
 }
