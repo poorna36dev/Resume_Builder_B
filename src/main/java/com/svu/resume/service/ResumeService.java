@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.svu.resume.document.Resume;
 import com.svu.resume.document.User;
+import com.svu.resume.dto.CreatedResumeRequest;
 import com.svu.resume.repository.ResumeRepository;
 
 import lombok.RequiredArgsConstructor;
