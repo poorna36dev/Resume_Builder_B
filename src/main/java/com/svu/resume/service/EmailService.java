@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Base64;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -23,39 +25,93 @@ public class EmailService {
     private String mailApiKey;
 
     @Value("${mail.sender}")
-    private String senderEmail;
+    private String senderEmail; // verified brevo email
 
     private final RestTemplate restTemplate;
 
-    // send verification / normal html email
+    // ===============================
+    // VERIFICATION EMAIL
+    // ===============================
     public void sendHTMLMail(String to, String subject, String htmlContent) {
-        log.info("Sending HTML email to: {}", to);
-        sendEmail(to, subject, htmlContent);
+        log.info("Sending verification email to {}", to);
+        sendEmail(to, subject, htmlContent, null, null);
     }
 
-    private void sendEmail(String to, String subject, String body) {
-        try {
+    // ===============================
+    // RESUME WITH PDF ATTACHMENT
+    // ===============================
+    public void sendEmailWithAttachment(String to,
+                                        String subject,
+                                        String body,
+                                        byte[] attachmentBytes,
+                                        String filename) {
 
+        log.info("Sending resume PDF email to {}", to);
+
+        String base64File = null;
+        if (attachmentBytes != null) {
+            base64File = Base64.getEncoder().encodeToString(attachmentBytes);
+        }
+
+        sendEmail(to, subject, body, base64File, filename);
+    }
+
+    // ===============================
+    // CORE BREVO METHOD
+    // ===============================
+    private void sendEmail(String to,
+                           String subject,
+                           String htmlContent,
+                           String base64Attachment,
+                           String filename) {
+
+        try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // 🔥 BREVO API KEY HEADER (IMPORTANT)
+            // 🔥 REQUIRED FOR BREVO
             headers.set("api-key", mailApiKey);
 
-            // JSON body for brevo
-            String json = """
-            {
-              "sender": {
-                "name": "Resume Builder",
-                "email": "%s"
-              },
-              "to": [
-                { "email": "%s" }
-              ],
-              "subject": "%s",
-              "htmlContent": "%s"
+            String json;
+
+            // if attachment present
+            if (base64Attachment != null && filename != null) {
+                json = """
+                {
+                  "sender": {
+                    "name": "Resume Builder",
+                    "email": "%s"
+                  },
+                  "to": [
+                    { "email": "%s" }
+                  ],
+                  "subject": "%s",
+                  "htmlContent": "%s",
+                  "attachment": [
+                    {
+                      "content": "%s",
+                      "name": "%s"
+                    }
+                  ]
+                }
+                """.formatted(senderEmail, to, subject, htmlContent, base64Attachment, filename);
+
+            } else {
+                // normal email
+                json = """
+                {
+                  "sender": {
+                    "name": "Resume Builder",
+                    "email": "%s"
+                  },
+                  "to": [
+                    { "email": "%s" }
+                  ],
+                  "subject": "%s",
+                  "htmlContent": "%s"
+                }
+                """.formatted(senderEmail, to, subject, htmlContent);
             }
-            """.formatted(senderEmail, to, subject, body);
 
             HttpEntity<String> entity = new HttpEntity<>(json, headers);
 
@@ -63,11 +119,11 @@ public class EmailService {
                     restTemplate.postForEntity(mailApiUrl, entity, String.class);
 
             log.info("BREVO RESPONSE: {}", response.getBody());
-            log.info("Email sent successfully to {}", to);
+            log.info("EMAIL SENT SUCCESSFULLY to {}", to);
 
         } catch (Exception e) {
-            log.error("Error sending email: {}", e.getMessage());
-            throw new RuntimeException("Email sending failed");
+            log.error("EMAIL FAILED: {}", e.getMessage());
+            throw new RuntimeException("Email sending failed", e);
         }
     }
 }
