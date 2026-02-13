@@ -23,63 +23,60 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class JwtAuthFilter extends OncePerRequestFilter{
+public class JwtAuthFilter extends OncePerRequestFilter {
     private final Jwtutil jwtUtil;
     private final UserRepository userRepository;
+
     @Override
-protected void doFilterInternal(HttpServletRequest request,
-                                HttpServletResponse response,
-                                FilterChain filterChain)
-        throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
 
-    String path = request.getServletPath();
+        String path = request.getServletPath();
 
-    // 🔥 Skip auth endpoints
-    if (path.startsWith("/api/auth")) {
-        filterChain.doFilter(request, response);
-        return;
-    }
+        // 🔥 Skip auth endpoints
 
-    String header = request.getHeader("Authorization");
-    String token = null;
-    String userId = null;
+        String header = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
 
-    if (header != null && header.startsWith("Bearer ")) {
-        token = header.substring(7);
-    } else {
-        filterChain.doFilter(request, response);
-        return;
-    }
-
-    try {
-        userId = jwtUtil.getUserIdFromToken(token);
-    } catch (Exception e) {
-        log.info("Token invalid or expired");
-        filterChain.doFilter(request, response);
-        return;
-    }
-
-    if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-        try {
-            log.info("Received token: {}", token);
-            log.info("Extracted userId: {}", userId);
-
-            if (jwtUtil.validateToken(token)) {
-
-                User user = userRepository.findById(userId)
-                        .orElseThrow(() -> new RuntimeException("User not found"));
-
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
-        } catch (Exception e) {
-            log.error("JWT validation error: ", e);
+        if (header != null && header.startsWith("Bearer ")) {
+            token = header.substring(7);
+        } else {
+            filterChain.doFilter(request, response);
+            return;
         }
-    }
 
-    filterChain.doFilter(request, response);
-}
+        try {
+            userId = jwtUtil.getUserIdFromToken(token);
+        } catch (Exception e) {
+            log.info("Token invalid or expired");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                log.info("Received token: {}", token);
+                log.info("Extracted userId: {}", userId);
+
+                if (jwtUtil.validateToken(token)) {
+
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new RuntimeException("User not found"));
+
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user, null,
+                            new ArrayList<>());
+
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } catch (Exception e) {
+                log.error("JWT validation error: ", e);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
 }
