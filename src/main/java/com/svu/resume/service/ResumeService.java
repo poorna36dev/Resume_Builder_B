@@ -8,8 +8,6 @@ import org.springframework.stereotype.Service;
 
 import com.svu.resume.document.Resume;
 import com.svu.resume.document.User;
-import com.svu.resume.dto.AuthResponse;
-import com.svu.resume.dto.CreatedResumeRequest;
 import com.svu.resume.repository.ResumeRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -20,16 +18,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ResumeService {
     private final ResumeRepository resumeRepository;
-    private final AuthService authService;
-    public Resume createResume(CreatedResumeRequest request,Authentication authentication) {
-        Resume newResume=new Resume();
-        User user = (User) authentication.getPrincipal(); 
-        AuthResponse response=authService.getProfile(user);
-        newResume.setUserId(response.getId());
+
+    public Resume createResume(CreatedResumeRequest request, Authentication authentication) {
+        Resume newResume = new Resume();
+        User user = (User) authentication.getPrincipal();
+        newResume.setUserId(user.getId());
         newResume.setTitle(request.getTitle());
         setDefaultInfo(newResume);
         return resumeRepository.save(newResume);
-        
+
     }
 
     private void setDefaultInfo(Resume newResume) {
@@ -45,31 +42,28 @@ public class ResumeService {
     }
 
     public List<Resume> getUserResumes(Authentication authentication) {
-       User user = (User) authentication.getPrincipal(); 
-        AuthResponse response=authService.getProfile(user);
-        List<Resume> resumes= resumeRepository.findByUserIdOrderByUpdatedAtDesc(response.getId());
+        User user = (User) authentication.getPrincipal();
+        List<Resume> resumes = resumeRepository.findByUserIdOrderByUpdatedAtDesc(user.getId());
         return resumes;
     }
 
     public Resume getResumeById(String id, Authentication authentication) {
-        User user = (User) authentication.getPrincipal(); 
-        AuthResponse response=authService.getProfile(user);
-        Resume resume=resumeRepository
-        .findByUserIdAndId(response.getId(),id)
-        .orElseThrow(()->{
-            return new RuntimeException("Resume not Found");
-        });
+        User user = (User) authentication.getPrincipal();
+        Resume resume = resumeRepository
+                .findByUserIdAndId(user.getId(), id)
+                .orElseThrow(() -> {
+                    return new RuntimeException("Resume not Found");
+                });
         return resume;
     }
 
     public Resume updateResume(String id, Resume updatedData, Authentication authentication) {
-        User user = (User) authentication.getPrincipal(); 
-        AuthResponse response=authService.getProfile(user);
-        Resume existingResume=resumeRepository
-        .findByUserIdAndId(response.getId(),id)
-        .orElseThrow(()->{
-            return new RuntimeException("Resume not Found");
-        });  
+        User user = (User) authentication.getPrincipal();
+        Resume existingResume = resumeRepository
+                .findByUserIdAndId(user.getId(), id)
+                .orElseThrow(() -> {
+                    return new RuntimeException("Resume not Found");
+                });
         existingResume.setSkills(updatedData.getSkills());
         existingResume.setProfileInfo(updatedData.getProfileInfo());
         existingResume.setThumbnailLink(updatedData.getThumbnailLink());
@@ -81,19 +75,18 @@ public class ResumeService {
         existingResume.setCertifications(updatedData.getCertifications());
         existingResume.setLanguages(updatedData.getLanguages());
         existingResume.setHobbies(updatedData.getHobbies());
-        Resume resume=resumeRepository.save(existingResume);
+        Resume resume = resumeRepository.save(existingResume);
         return resume;
-        
+
     }
 
     public void deleteResume(String id, Authentication authentication) {
-        User user = (User) authentication.getPrincipal(); 
-        AuthResponse response=authService.getProfile(user);
-        Resume existingResume=resumeRepository
-        .findByUserIdAndId(response.getId(),id)
-        .orElseThrow(()->{
-            return new RuntimeException("Resume not Found");
-        });
-        resumeRepository.delete(existingResume); 
+        User user = (User) authentication.getPrincipal();
+        Resume existingResume = resumeRepository
+                .findByUserIdAndId(user.getId(), id)
+                .orElseThrow(() -> {
+                    return new RuntimeException("Resume not Found");
+                });
+        resumeRepository.delete(existingResume);
     }
 }
