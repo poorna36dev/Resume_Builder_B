@@ -27,7 +27,6 @@ import static com.svu.resume.util.AppConstants.AUTH_CONTROLLER;
 import static com.svu.resume.util.AppConstants.REGISTER;
 import static com.svu.resume.util.AppConstants.VERIFY_EMAIL;
 
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -93,16 +92,6 @@ public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) th
         User existingUser=(User) authentication.getPrincipal();
         AuthResponse profile=authService.getProfile(existingUser);
         return ResponseEntity.ok(profile);
-
     }
-    @GetMapping("/test-mail")
-public String testMail() throws MessagingException {
-    emailService.sendHTMLMail(
-        "your@email.com",
-        "Test Mail",
-        "If you got this, email works"
-    );
-    return "sent";
-}
 
 }
