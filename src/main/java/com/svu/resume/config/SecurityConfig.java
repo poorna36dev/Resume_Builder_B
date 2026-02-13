@@ -44,6 +44,8 @@ public class SecurityConfig {
             .permitAll()
             .anyRequest().authenticated())
         .csrf(csrf->csrf.disable())
+        .formLogin(form -> form.disable())
+        .httpBasic(basic -> basic.disable())
         .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .addFilterBefore(jwtAuthFilter,UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(ex->ex.authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
