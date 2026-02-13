@@ -10,9 +10,8 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmailRequest {
-    private String to;
+    private String email; // renamed from 'to' or alias
+    private String downloadUrl;
     private String subject;
-    private String body;
-    private String filename;
-    private String attachment; // Base64 encoded string
+    private String message; // renamed from 'body'
 }
