@@ -40,6 +40,7 @@ public class SecurityConfig {
                 "/api/auth/resend-verfication",
                 "/actuator/**")
             .permitAll()
+            .requestMatchers("/api/email/**").permitAll()
             .anyRequest().authenticated())
         .csrf(csrf->csrf.disable())
         .formLogin(form -> form.disable())
