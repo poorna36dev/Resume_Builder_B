@@ -1,17 +1,18 @@
 package com.svu.resume.service;
+
+import java.util.Base64;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
@@ -49,11 +50,12 @@ public class EmailService {
     log.info("Sending resume PDF email to {}", to);
 
     String base64File = null;
-    if (attachmentBytes != null && attachmentBytes.length > 0) {
+    if (attachmentBytes != null) {
+      log.info("Encoding attachment of size: {} bytes", attachmentBytes.length);
       base64File = Base64.getEncoder().encodeToString(attachmentBytes);
-      log.info("Attachment converted to Base64. Length: {}", base64File.length());
+      log.info("Attachment encoded successfully. Base64 length: {}", base64File.length());
     } else {
-        log.warn("Attachment bytes are null or empty!");
+      log.warn("Attachment bytes are null");
     }
 
     sendEmail(to, subject, body, base64File, filename);

@@ -34,6 +34,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getServletPath();
+        log.info("Processing request: {} {}", request.getMethod(), path);
 
         // 🔥 Skip auth endpoints
 
