@@ -39,7 +39,13 @@ public class AuthService {
         userRepository.save(newUser);
 
 
-        sendVerificationEmail(newUser);
+        
+        try {
+            sendVerificationEmail(newUser);
+        } catch (Exception e) {
+            System.out.println("Email failed but user created: " + e.getMessage());
+        }
+
 
         return toResponse(newUser);
     }
