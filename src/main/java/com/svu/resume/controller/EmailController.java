@@ -68,14 +68,35 @@ public class EmailController {
             throw new RuntimeException("Failed to send email: " + e.getMessage());
         }
     }
-
     private String convertToDownloadUrl(String url) {
-        if (url == null)
-            return null;
-        // Inject fl_attachment flag to force download
-        if (url.contains("/upload/") && !url.contains("/fl_attachment/")) {
-            return url.replace("/upload/", "/upload/fl_attachment/");
-        }
+
+    if (url == null || url.isBlank()) {
         return url;
     }
+
+    if (!url.contains("/upload/")) {
+        return url;
+    }
+
+    try {
+        // Split at /upload/
+        String[] parts = url.split("/upload/");
+        String base = parts[0];
+        String path = parts[1];
+
+        // Remove version like v123456/
+        path = path.replaceFirst("^v\\d+/", "");
+
+        // Build forced download URL
+        String finalUrl = base + "/upload/fl_attachment/" + path;
+
+        log.info("Converted Download URL: {}", finalUrl);
+        return finalUrl;
+
+    } catch (Exception e) {
+        log.error("Error converting Cloudinary URL", e);
+        return url;
+    }
+}
+
 }
