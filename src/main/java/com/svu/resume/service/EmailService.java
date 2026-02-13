@@ -39,32 +39,36 @@ public class EmailService {
     }
 
     private void sendEmail(String to, String subject, String body, String attachment, String filename) {
-        try {
-            EmailRequest request = EmailRequest.builder()
-                    .to(to)
-                    .subject(subject)
-                    .body(body)
-                    .attachment(attachment)
-                    .filename(filename)
-                    .build();
+    try {
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("api-key", mailApiKey);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("api-key", mailApiKey);   // IMPORTANT for brevo
 
-            HttpEntity<EmailRequest> entity = new HttpEntity<>(request, headers);
-
-            ResponseEntity<String> response = restTemplate.postForEntity(mailApiUrl, entity, String.class);
-
-            if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("Email sent successfully to {}", to);
-            } else {
-                log.error("Failed to send email. Status code: {}", response.getStatusCode());
-                throw new RuntimeException("Failed to send email: " + response.getStatusCode());
-            }
-        } catch (Exception e) {
-            log.error("Error sending email: {}", e.getMessage());
-            throw new RuntimeException("Error sending email", e);
+        String json = """
+        {
+          "sender": {
+            "name": "Resume Builder",
+            "email": "YOUR_VERIFIED_BREVO_EMAIL"
+          },
+          "to": [
+            { "email": "%s" }
+          ],
+          "subject": "%s",
+          "htmlContent": "%s"
         }
+        """.formatted(to, subject, body);
+
+        HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+        ResponseEntity<String> response =
+                restTemplate.postForEntity(mailApiUrl, entity, String.class);
+
+        log.info("BREVO RESPONSE: {}", response.getBody());
+
+    } catch (Exception e) {
+        log.error("Error sending email: {}", e.getMessage());
+        throw new RuntimeException(e);
+    }
     }
 }
