@@ -29,14 +29,23 @@ public class EmailController {
 
     @PostMapping(value = "/send-email", consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> sendResumeByEmail(
-            @RequestPart("recipientEmail") String recipientEmail,
-            @RequestPart("subject") String subject,
-            @RequestPart("message") String message,
-            @RequestPart("pdfFile") MultipartFile pdfFile,
+            @RequestParam("recipientEmail") String recipientEmail,
+            @RequestParam("subject") String subject,
+            @RequestParam("message") String message,
+            @RequestParam("pdfFile") MultipartFile pdfFile,
             Authentication authentication) throws IOException {
 
-        if (Objects.isNull(recipientEmail) || Objects.isNull(pdfFile)) {
-            throw new RuntimeException("email and pdf is required");
+        log.info("Received email request for: {}", recipientEmail);
+        
+        if (pdfFile == null || pdfFile.isEmpty()) {
+            log.error("PDF File is missing or empty");
+            throw new RuntimeException("pdf file is required");
+        }
+        
+        log.info("PDF Size: {} bytes, Original Filename: {}", pdfFile.getSize(), pdfFile.getOriginalFilename());
+
+        if (Objects.isNull(recipientEmail)) {
+            throw new RuntimeException("email is required");
         }
         byte[] pdfBytes = pdfFile.getBytes();
         String originalFilename = pdfFile.getOriginalFilename();

@@ -49,8 +49,11 @@ public class EmailService {
     log.info("Sending resume PDF email to {}", to);
 
     String base64File = null;
-    if (attachmentBytes != null) {
+    if (attachmentBytes != null && attachmentBytes.length > 0) {
       base64File = Base64.getEncoder().encodeToString(attachmentBytes);
+      log.info("Attachment converted to Base64. Length: {}", base64File.length());
+    } else {
+        log.warn("Attachment bytes are null or empty!");
     }
 
     sendEmail(to, subject, body, base64File, filename);
