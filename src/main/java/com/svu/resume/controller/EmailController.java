@@ -74,21 +74,21 @@ public class EmailController {
         return url;
     }
 
-    if (!url.contains("/upload/")) {
-        return url;
-    }
-
     try {
-        // Split at /upload/
-        String[] parts = url.split("/upload/");
-        String base = parts[0];
-        String path = parts[1];
+        // already converted
+        if (url.contains("fl_attachment")) {
+            return url;
+        }
 
-        // Remove version like v123456/
-        path = path.replaceFirst("^v\\d+/", "");
+        int index = url.indexOf("/upload/");
+        if (index == -1) {
+            return url;
+        }
 
-        // Build forced download URL
-        String finalUrl = base + "/upload/fl_attachment/" + path;
+        String before = url.substring(0, index + 8); // includes /upload/
+        String after = url.substring(index + 8);     // keep version + folder + file
+
+        String finalUrl = before + "fl_attachment/" + after;
 
         log.info("Converted Download URL: {}", finalUrl);
         return finalUrl;
@@ -98,5 +98,4 @@ public class EmailController {
         return url;
     }
 }
-
 }
