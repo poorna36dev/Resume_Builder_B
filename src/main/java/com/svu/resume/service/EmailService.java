@@ -50,11 +50,7 @@ public class EmailService {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            if (mailApiKey != null && !mailApiKey.isEmpty()) {
-                headers.set("Authorization", "Bearer " + mailApiKey);
-                // Also add generic API key header just in case provider uses that
-                headers.set("x-api-key", mailApiKey);
-            }
+            headers.set("api-key", mailApiKey);
 
             HttpEntity<EmailRequest> entity = new HttpEntity<>(request, headers);
 
