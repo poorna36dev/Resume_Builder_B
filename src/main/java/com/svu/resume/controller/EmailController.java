@@ -50,8 +50,14 @@ public class EmailController {
         byte[] pdfBytes = pdfFile.getBytes();
         String originalFilename = pdfFile.getOriginalFilename();
         String filename = Objects.nonNull(originalFilename) ? originalFilename : "resume.pdf";
-        String emailSubject = Objects.nonNull(subject) ? subject : "Resume Application";
-        String emailBody = Objects.nonNull(message) ? message : "find the attached Resume below\n\n BestRegards";
+        String emailSubject = (subject == null || subject.trim().isEmpty())
+        ? "Resume Application"
+        : subject;
+
+        String emailBody = (message == null || message.trim().isEmpty())
+        ? "Please find attached my resume.\n\nBest regards"
+        : message;
+
         emailService.sendEmailWithAttachment(recipientEmail, emailSubject, emailBody, pdfBytes, filename);
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
