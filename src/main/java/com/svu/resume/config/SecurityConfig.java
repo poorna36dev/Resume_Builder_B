@@ -40,6 +40,10 @@ public class SecurityConfig {
                 "/api/auth/resend-verfication",
                 "/actuator/**")
             .permitAll()
+            .requestMatchers("/loaderio-*.txt").permitAll()
+                
+                // allow static files
+                .requestMatchers("/static/**","/css/**","/js/**").permitAll()
             .requestMatchers("/api/email/**").permitAll()
             .anyRequest().authenticated())
         .csrf(csrf->csrf.disable())
