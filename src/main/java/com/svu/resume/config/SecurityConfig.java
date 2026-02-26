@@ -40,7 +40,7 @@ public class SecurityConfig {
                 "/api/auth/resend-verfication",
                 "/actuator/**")
             .permitAll()
-            .requestMatchers("/loaderio-*.txt").permitAll()
+            .requestMatchers("/loaderio-**.txt").permitAll()
                 
                 // allow static files
                 .requestMatchers("/static/**","/css/**","/js/**").permitAll()
